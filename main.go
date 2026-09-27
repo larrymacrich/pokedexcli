@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	// Reading from console
+	commands := getCliCommands()
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		fmt.Print("Pokedex > ")
@@ -18,7 +18,19 @@ func main() {
 		if len(input) == 0 {
 			continue
 		}
-		fmt.Printf("Your command was: %s\n", input[0])
+
+		// Check for valid commands
+		command, exists := commands[input[0]]
+		if !exists {
+			fmt.Println("Unknown command")
+			continue
+		}
+		// Check callback for errors
+		err := command.callback()
+		if err != nil {
+			fmt.Println(err)
+		}
+
 	}
 	// Check for errors during scanning
 	if err := scanner.Err(); err != nil {
