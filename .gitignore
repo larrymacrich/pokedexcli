@@ -39,3 +39,6 @@ Thumbs.db
 
 # Binary code files
 pokedexcli
+
+# Ignore log files
+*.log
