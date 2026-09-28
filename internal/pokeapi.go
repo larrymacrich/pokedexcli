@@ -6,8 +6,20 @@ import (
 	"net/http"
 )
 
+type LocationAreasResponse struct {
+	Count    int                  `json:"count"`
+	Next     *string              `json:"next"`
+	Previous *string              `json:"previous"`
+	Results  []LocationAreaResult `json:"results"`
+}
+
+type LocationAreaResult struct {
+	Name string `json:"name"`
+	URL  string `json:"url"`
+}
+
 // getLocationAreas returns 20 locations areas
-func GetLocationAreas(url string) (*map[string]any, error) {
+func GetLocationAreas(url string) (*LocationAreasResponse, error) {
 	// request
 	res, err := http.Get(url)
 	if err != nil {
@@ -23,11 +35,12 @@ func GetLocationAreas(url string) (*map[string]any, error) {
 	}
 
 	// decode
-	var data map[string]any
+	var data LocationAreasResponse
 	decoder := json.NewDecoder(res.Body)
 	if err := decoder.Decode(&data); err != nil {
 		return nil, err
 	}
+	fmt.Printf("%+v\n", data)
 
 	return &data, nil
 }

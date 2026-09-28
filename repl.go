@@ -19,7 +19,6 @@ type config struct {
 	commands map[string]cliCommand
 	next     *string
 	previous *string
-	result   *[]map[string]string
 }
 
 // getCliCommands returns the commands supported by the CLI.
@@ -90,40 +89,17 @@ func commandMapb(cfg *config) error {
 }
 
 func fetchAndDisplayLocations(cfg *config, url string) error {
-	locationAreas, err := pokeapi.GetLocationAreas(url)
+	locationAreasResponse, err := pokeapi.GetLocationAreas(url)
 	if err != nil {
 		errMsg := fmt.Errorf("something went wrong: %s", err)
 		return errMsg
 	}
 
-	// assertions
-	if nextVal, ok := (*locationAreas)["next"].(string); !ok {
-		cfg.next = nil
-	} else {
-		cfg.next = &nextVal
-	}
+	cfg.next = locationAreasResponse.Next
+	cfg.previous = locationAreasResponse.Previous
 
-	if prevVal, ok := (*locationAreas)["previous"].(string); !ok {
-		cfg.previous = nil
-	} else {
-		cfg.previous = &prevVal
-	}
-
-	areaMapsArray, ok := (*locationAreas)["results"].([]any)
-	if !ok {
-		return fmt.Errorf("no valid result")
-	}
-
-	for _, item := range areaMapsArray {
-		areaMap, ok := item.(map[string]any)
-		if !ok {
-			continue
-		}
-		name, ok := areaMap["name"].(string)
-		if !ok {
-			continue
-		}
-		fmt.Println(name)
+	for _, areaResult := range locationAreasResponse.Results {
+		fmt.Println(areaResult.Name)
 	}
 	return nil
 }
