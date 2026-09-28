@@ -1,8 +1,10 @@
 package main
 
 func main() {
-	var cfg config
-	cfg.commands = getCliCommands()
+	baseURL := "https://pokeapi.co/api/v2/location-area/"
+	cfg := config{
+		commands: getCliCommands(),
+		next:     &baseURL,
+	}
 	startRepl(&cfg)
-
 }

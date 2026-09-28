@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	pokeapi "github.com/larrymacrich/pokedexcli/internal"
 )
 
 type cliCommand struct {
@@ -15,6 +17,9 @@ type cliCommand struct {
 
 type config struct {
 	commands map[string]cliCommand
+	next     *string
+	previous *string
+	result   *[]map[string]string
 }
 
 // getCliCommands returns the commands supported by the CLI.
@@ -29,6 +34,18 @@ func getCliCommands() map[string]cliCommand {
 			name:        "help",
 			description: "Displays a help message",
 			callback:    commandHelp,
+		},
+		"map": {
+			name: "map",
+			description: ("Displays the names of location areas\n" +
+				"Each subsequent call displays the next 20 areas"),
+			callback: commandMap,
+		},
+		"mapb": {
+			name: "map",
+			description: ("Displays the names of location areas\n" +
+				"Each subsequent call displays the previous 20 areas"),
+			callback: commandMapb,
 		},
 	}
 	return commands
@@ -54,9 +71,61 @@ Usage:
 	return nil
 }
 
-// cleanInput normalizes input and splits it into words.
-func cleanInput(text string) []string {
-	return strings.Fields(strings.ToLower(text))
+// commandMap prints the names of the next 20 location areas
+func commandMap(cfg *config) error {
+	if cfg.next == nil {
+		fmt.Println("you're on the last page")
+		return nil
+	}
+	return fetchAndDisplayLocations(cfg, *cfg.next)
+}
+
+// commandMapb prints the names of the previous 20 location areas
+func commandMapb(cfg *config) error {
+	if cfg.previous == nil {
+		fmt.Println("you're on the first page")
+		return nil
+	}
+	return fetchAndDisplayLocations(cfg, *cfg.previous)
+}
+
+func fetchAndDisplayLocations(cfg *config, url string) error {
+	locationAreas, err := pokeapi.GetLocationAreas(url)
+	if err != nil {
+		errMsg := fmt.Errorf("something went wrong: %s", err)
+		return errMsg
+	}
+
+	// assertions
+	if nextVal, ok := (*locationAreas)["next"].(string); !ok {
+		cfg.next = nil
+	} else {
+		cfg.next = &nextVal
+	}
+
+	if prevVal, ok := (*locationAreas)["previous"].(string); !ok {
+		cfg.previous = nil
+	} else {
+		cfg.previous = &prevVal
+	}
+
+	areaMapsArray, ok := (*locationAreas)["results"].([]any)
+	if !ok {
+		return fmt.Errorf("no valid result")
+	}
+
+	for _, item := range areaMapsArray {
+		areaMap, ok := item.(map[string]any)
+		if !ok {
+			continue
+		}
+		name, ok := areaMap["name"].(string)
+		if !ok {
+			continue
+		}
+		fmt.Println(name)
+	}
+	return nil
 }
 
 // startRepl loops infinitly through CLI commands
@@ -89,4 +158,9 @@ func startRepl(cfg *config) {
 	if err := scanner.Err(); err != nil {
 		fmt.Fprintln(os.Stderr, "reading input:", err)
 	}
+}
+
+// cleanInput normalizes input and splits it into words.
+func cleanInput(text string) []string {
+	return strings.Fields(strings.ToLower(text))
 }
