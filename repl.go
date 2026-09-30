@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
-	pokeapi "github.com/larrymacrich/pokedexcli/internal"
+	pokeapi "github.com/larrymacrich/pokedexcli/internal/pokeapi"
 )
 
 type cliCommand struct {
@@ -16,9 +17,11 @@ type cliCommand struct {
 }
 
 type config struct {
-	commands map[string]cliCommand
-	next     *string
-	previous *string
+	commands      map[string]cliCommand
+	next          *string
+	previous      *string
+	cacheInterval time.Duration
+	pokeapiClient *pokeapi.Client
 }
 
 // getCliCommands returns the commands supported by the CLI.
@@ -89,7 +92,7 @@ func commandMapb(cfg *config) error {
 }
 
 func fetchAndDisplayLocations(cfg *config, url string) error {
-	locationAreasResponse, err := pokeapi.GetLocationAreas(url)
+	locationAreasResponse, err := cfg.pokeapiClient.GetLocationAreas(url)
 	if err != nil {
 		errMsg := fmt.Errorf("something went wrong: %s", err)
 		return errMsg
