@@ -13,7 +13,8 @@ import (
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*config) error
+	callback    func(*config, []string) error
+	parameters  map[string]string
 }
 
 type config struct {
@@ -49,19 +50,24 @@ func getCliCommands() map[string]cliCommand {
 				"Each subsequent call displays the previous 20 areas"),
 			callback: commandMapb,
 		},
+		"explore": {
+			name:        "explore",
+			description: ("Displays the names of pokemon found in a given area"),
+			callback:    commandExplore,
+		},
 	}
 	return commands
 }
 
 // commandExit prints a farewell message and exits the program.
-func commandExit(cfg *config) error {
+func commandExit(cfg *config, args []string) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
 // commandHelp prints usage information for available commands.
-func commandHelp(cfg *config) error {
+func commandHelp(cfg *config, args []string) error {
 	message := `Welcome to the Pokedex!
 Usage:
 `
@@ -74,7 +80,7 @@ Usage:
 }
 
 // commandMap prints the names of the next 20 location areas
-func commandMap(cfg *config) error {
+func commandMap(cfg *config, args []string) error {
 	if cfg.next == nil {
 		fmt.Println("you're on the last page")
 		return nil
@@ -83,7 +89,7 @@ func commandMap(cfg *config) error {
 }
 
 // commandMapb prints the names of the previous 20 location areas
-func commandMapb(cfg *config) error {
+func commandMapb(cfg *config, args []string) error {
 	if cfg.previous == nil {
 		fmt.Println("you're on the first page")
 		return nil
@@ -107,6 +113,26 @@ func fetchAndDisplayLocations(cfg *config, url string) error {
 	return nil
 }
 
+// commandExplore prints the available pokemon in a given area
+func commandExplore(cfg *config, args []string) error {
+	if len(args) == 0 {
+		errMsg := fmt.Errorf("required parameter <area_name> missing")
+		return errMsg
+	}
+
+	locationAreaResponse, err := cfg.pokeapiClient.GetLocationArea(args[0])
+	if err != nil {
+		errMsg := fmt.Errorf("something went wrong: %s", err)
+		return errMsg
+	}
+
+	fmt.Printf("Exploring %s...\nFound Pokemon:\n", locationAreaResponse.Name)
+	for _, pokemonEncounter := range locationAreaResponse.PokemonEncounters {
+		fmt.Printf(" - %s\n", pokemonEncounter.Pokemon.Name)
+	}
+	return nil
+}
+
 // startRepl loops infinitly through CLI commands
 func startRepl(cfg *config) {
 	scanner := bufio.NewScanner(os.Stdin)
@@ -120,14 +146,15 @@ func startRepl(cfg *config) {
 			continue
 		}
 
-		// Check for valid commands
+		// Check for valid commands and parameters
 		command, exists := cfg.commands[input[0]]
 		if !exists {
 			fmt.Println("Unknown command")
 			continue
 		}
+
 		// Check callback for errors
-		err := command.callback(cfg)
+		err := command.callback(cfg, input[1:])
 		if err != nil {
 			fmt.Println(err)
 		}

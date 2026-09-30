@@ -42,3 +42,6 @@ pokedexcli
 
 # Ignore log files
 *.log
+
+# Ignore json files
+*.json
