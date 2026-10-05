@@ -1,6 +1,7 @@
 package pokedex
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/larrymacrich/pokedexcli/internal/pokeapi"
@@ -33,4 +34,11 @@ func (p *Pokedex) Get(name string) (*pokeapi.PokemonResponse, bool) {
 		return nil, ok
 	}
 	return entry, ok
+}
+
+func (p *Pokedex) PrintPokedex() {
+	fmt.Println("Your Pokedex:")
+	for _, pokemon := range p.pokemons {
+		fmt.Printf(" - %s\n", pokemon.Name)
+	}
 }
