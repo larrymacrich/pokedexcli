@@ -39,3 +39,12 @@ Thumbs.db
 
 # Binary code files
 pokedexcli
+
+# Ignore log files
+*.log
+
+# Ignore json files
+*.json
+
+# Ignore txt files
+*.txt
