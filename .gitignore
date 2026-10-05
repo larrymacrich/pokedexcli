@@ -45,3 +45,6 @@ pokedexcli
 
 # Ignore json files
 *.json
+
+# Ignore txt files
+*.txt
