@@ -7,6 +7,7 @@ import (
 	"net/http"
 )
 
+// getLocationArea returns pokemon in a given area
 func (c *Client) GetLocationArea(areaName string) (*LocationAreaResponse, error) {
 	url := baseURL + "/location-area/" + areaName
 	// check for cached requests

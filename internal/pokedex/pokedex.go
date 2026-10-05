@@ -1,41 +1,36 @@
 package pokedex
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/larrymacrich/pokedexcli/internal/pokeapi"
+)
 
 type Pokedex struct {
 	mu       sync.Mutex
-	pokemons map[string]PokedexEntry
-}
-
-type PokedexEntry struct {
-	name string
-	exp  int
+	pokemons map[string]*pokeapi.PokemonResponse
 }
 
 func NewPokedex() *Pokedex {
-	pokemons := make(map[string]PokedexEntry)
+	pokemons := make(map[string]*pokeapi.PokemonResponse)
 	return &Pokedex{
 		mu:       sync.Mutex{},
 		pokemons: pokemons,
 	}
 }
 
-func (p *Pokedex) Add(name string, exp int) {
+func (p *Pokedex) Add(name string, pokemon *pokeapi.PokemonResponse) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	entry := PokedexEntry{
-		name: name,
-		exp:  exp,
-	}
-	p.pokemons[name] = entry
+	p.pokemons[name] = pokemon
 }
 
-func (p *Pokedex) Get(name string) (string, bool) {
+func (p *Pokedex) Get(name string) (*pokeapi.PokemonResponse, bool) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	entry, ok := p.pokemons[name]
 	if !ok {
-		return "", ok
+		return nil, ok
 	}
-	return entry.name, ok
+	return entry, ok
 }

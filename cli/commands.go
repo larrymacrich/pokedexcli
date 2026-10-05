@@ -7,6 +7,7 @@ type cliCommand struct {
 }
 
 // getCliCommands returns the commands supported by the CLI.
+// TODO: change type to get an orderd list
 func getCliCommands() map[string]cliCommand {
 	var commands = map[string]cliCommand{
 		"exit": {
@@ -38,8 +39,13 @@ func getCliCommands() map[string]cliCommand {
 		},
 		"catch": {
 			name:        "catch <pokemon_name>",
-			description: ("Attempting to catch the given pokemon"),
+			description: ("Attempting to catch a pokemon"),
 			callback:    commandCatch,
+		},
+		"inspect": {
+			name:        "inspect <pokemon_name>",
+			description: ("Printing the name, height, weight, stats and type(s) of the pokemon to the console"),
+			callback:    commandInspect,
 		},
 	}
 	return commands

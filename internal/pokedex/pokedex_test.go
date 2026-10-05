@@ -1,17 +1,30 @@
 package pokedex
 
-import "testing"
+import (
+	"testing"
+	"time"
+
+	"github.com/larrymacrich/pokedexcli/internal/pokeapi"
+)
 
 func TestAddAndGet(t *testing.T) {
+	const cacheInterval = 5 * time.Second
+	const waitTime = 200 * time.Millisecond
+	pokeapiClient := pokeapi.NewClient(cacheInterval)
+	pokemonResponse, err := pokeapiClient.GetPokemon("pikachu")
+	if err != nil {
+		t.Fatalf("GetPokemon failed: %v", err)
+	}
+	time.Sleep(waitTime)
 	p := NewPokedex()
-	p.Add("pikachu", 112)
+	p.Add("pikachu", pokemonResponse)
 
-	name, ok := p.Get("pikachu")
+	pokemonResponse, ok := p.Get("pikachu")
 	if !ok {
 		t.Fatalf("expected pikachu to be found")
 	}
-	if name != "pikachu" {
-		t.Fatalf("expected name 'pikachu', got %s", name)
+	if pokemonResponse.Name != "pikachu" {
+		t.Fatalf("expected name 'pikachu', got %s", pokemonResponse.Name)
 	}
 }
 
